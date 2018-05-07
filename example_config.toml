@@ -1,0 +1,5 @@
+[check]
+input = "tmp/input.log"
+pattern = "^%{TIMESTAMP_ISO8601:timestamp} %{NUMBER:ign} \\| %{LOGLEVEL:level}%{SPACE} \\| %{GREEDYDATA:message}$"
+
+[show]

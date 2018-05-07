@@ -48,13 +48,12 @@ pub struct Parser {
 }
 
 impl Parser {
-    pub fn new() -> Result<Self, ParserError> {
+    pub fn new(pattern: &str) -> Result<Self, ParserError> {
         let mut grok = Grok::default();
-        let pattern = grok.compile(
-            r"^%{TIMESTAMP_ISO8601:timestamp} %{NUMBER:ign} \| %{LOGLEVEL:level}%{SPACE}\| %{GREEDYDATA:message}$",
-            false,
-        )?;
-        Ok(Parser { pattern })
+        let compiled_pattern = grok.compile(pattern, false)?;
+        Ok(Parser {
+            pattern: compiled_pattern,
+        })
     }
     pub fn parse(&self, input: &str) -> Result<Option<LogLine>, ParserError> {
         Ok(match self.pattern.match_against(input) {
