@@ -44,7 +44,6 @@ Both commands need a config file via the `-c` argument. A sample can be found [h
 If we start with the following config file
 
 ```toml
-cat oida.toml 
 [check]
 input = "tmp/input.log"
 pattern = "^%{TIMESTAMP_ISO8601:timestamp} %{NUMBER:ign} \\| %{LOGLEVEL:level}%{SPACE} \\| %{GREEDYDATA:message}$"
@@ -80,4 +79,5 @@ Topology Events
   16:16:48 node + 10.80.161.146
   16:16:48 node + 10.80.161.150
   16:16:48 node + 10.80.161.184
+...
 ```
