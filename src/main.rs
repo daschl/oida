@@ -39,13 +39,17 @@ fn main() {
     }
 }
 
-fn check(matches: &ArgMatches) {
+fn grab_config(matches: &ArgMatches) -> Config {
     let path = matches.value_of("config").unwrap_or("oida.toml");
     let mut file = File::open(&path).expect("Could not open config file!");
     let mut contents = String::new();
     file.read_to_string(&mut contents)
         .expect("Unable to read the file");
-    let config: Config = toml::from_str(&contents).expect("could not parse config");
+    toml::from_str(&contents).expect("could not parse config")
+}
+
+fn check(matches: &ArgMatches) {
+    let config = grab_config(&matches);
     let check_config = config.check.unwrap();
 
     let source = FileSource::new(&check_config.input).expect("Could not init file source");
@@ -83,12 +87,7 @@ fn check(matches: &ArgMatches) {
 }
 
 fn show(matches: &ArgMatches) {
-    let path = matches.value_of("config").unwrap_or("oida.toml");
-    let mut file = File::open(&path).expect("Could not open config file!");
-    let mut contents = String::new();
-    file.read_to_string(&mut contents)
-        .expect("Unable to read the file");
-    let config: Config = toml::from_str(&contents).expect("could not parse config");
+    let config = grab_config(&matches);
     let show_config = config.show.unwrap();
 
     let index_path = show_config.input.unwrap_or("index.oida".into());

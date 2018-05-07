@@ -2,4 +2,6 @@
 /target
 **/*.rs.bk
 tmp/
+index.oida
+oida.toml
 
