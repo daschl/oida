@@ -40,11 +40,8 @@ fn main() {
 }
 
 fn check(matches: &ArgMatches) {
-    let mut file = File::open(
-        matches
-            .value_of("config")
-            .expect("config filepath not found!"),
-    ).expect("Could not open config file!");
+    let path = matches.value_of("config").unwrap_or("oida.toml");
+    let mut file = File::open(&path).expect("Could not open config file!");
     let mut contents = String::new();
     file.read_to_string(&mut contents)
         .expect("Unable to read the file");
@@ -86,11 +83,8 @@ fn check(matches: &ArgMatches) {
 }
 
 fn show(matches: &ArgMatches) {
-    let mut file = File::open(
-        matches
-            .value_of("config")
-            .expect("config filepath not found!"),
-    ).expect("Could not open config file!");
+    let path = matches.value_of("config").unwrap_or("oida.toml");
+    let mut file = File::open(&path).expect("Could not open config file!");
     let mut contents = String::new();
     file.read_to_string(&mut contents)
         .expect("Unable to read the file");

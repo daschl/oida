@@ -1,5 +1,11 @@
+# Example oida config file
+# ------------------------
+# TIP: rename to oida.toml so its picked up in the current directory!
+
+# configures the "oida check" command
 [check]
 input = "tmp/input.log"
 pattern = "^%{TIMESTAMP_ISO8601:timestamp} %{NUMBER:ign} \\| %{LOGLEVEL:level}%{SPACE} \\| %{GREEDYDATA:message}$"
 
+# configures the "oida show" command
 [show]
