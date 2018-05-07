@@ -14,3 +14,22 @@ subcommands:
                 help: The file to be analyzed
                 required: true
                 takes_value: true
+            - output:
+                short: o
+                long: output
+                help: The index file to be written
+                takes_value: true
+    - show:
+        about: visualize the details of the index file
+        args:
+            - input:
+                short: i
+                long: input
+                help: The index file to be used
+                takes_value: true
+            - format:
+                short: f
+                long: format
+                takes_value: true
+                possible_values:
+                    - cli
