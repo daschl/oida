@@ -1,0 +1,16 @@
+name: oida
+version: "0.1"
+author: Michael Nitschinger <michael@nitschinger.at>
+about: Troubleshoot the Java SDK, oida.
+settings:
+    - SubcommandRequired
+subcommands:
+    - check:
+        about: analyze a logfile and generate a meta index for later use.
+        args:
+            - input:
+                short: i
+                long: input
+                help: The file to be analyzed
+                required: true
+                takes_value: true
