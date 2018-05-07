@@ -4,3 +4,78 @@ This project was started for only one reason: to make debugging after-the-fact p
 As we add features, expect some more documentation here.
 
 And if you want to know where the name came from, check out this [youtube video](https://www.youtube.com/watch?v=iuXR53ex4iI) explaining the name and then just figure out my usual first reaction to troubleshooting tickets.
+
+# Installation
+For now we are not shipping binaries (lol, what did you expect?) so you have to build it for yourself. Its fairly easy with rust:
+
+ - If you haven't already, install [rust](https://rustup.rs/).
+ - Clone the project `git clone https://github.com/daschl/oida.git`
+ - Change into the directory and run `cargo build --release`
+
+The binary can now be found under `target/release/oida`.
+
+# Usage
+oida is split into two commands. One to analyze your log file and to create an index of interesting events happening. And the other command to then visualize the index information. For now only CLI output is supported, but we want to add a proper web UI as well.
+
+## Analyze a Logfile
+
+Todo: add instructions on how to customize the input format, right now its hardcoded...
+
+You can always call `-h` to get help on the commands:
+
+```
+$ oida -h
+oida 0.1
+Michael Nitschinger <michael@nitschinger.at>
+Troubleshoot the Java SDK, oida.
+
+USAGE:
+    oida <SUBCOMMAND>
+
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
+
+SUBCOMMANDS:
+    check    analyze a logfile and generate a meta index for later use.
+    help     Prints this message or the help of the given subcommand(s)
+    show     visualize the details of the index file
+```
+
+Analyze a logfile with `check`:
+
+```
+$ oida check -i tmp/input.log 
+> Starting to analyze "tmp/input.log"
+1.36 MB / 1.36 MB [--------------------------------------------------------------------------------------------------------------------------------------------] 100.00 % 7.04 MB/s  > Completed
+> Dumping Index into File "index.oida"
+> Completed
+```
+
+Configurable, but by default the index is dumped in a file called `index.oida`. You can then feed it into the `show` command:
+
+```
+$ oida show
+> Loading Index from File "index.oida"
+> Completed
+> Printing Stats to CLI
+
+Topology Events
+---------------
+
+  16:16:46 node + 10.80.161.181
+  16:16:46 node + 10.80.162.14
+  16:16:46 node + 10.80.162.239
+  16:16:48 node + 10.80.161.133
+  16:16:48 node + 10.80.161.136
+  16:16:48 node + 10.80.161.144
+  16:16:48 node + 10.80.161.146
+  16:16:48 node + 10.80.161.150
+  16:16:48 node + 10.80.161.184
+  16:16:48 node + 10.80.161.199
+  16:16:48 node + 10.80.161.207
+  16:16:48 node + 10.80.161.214
+  16:16:48 node + 10.80.161.215
+  16:16:48 node + 10.80.161.243
+...
+```
