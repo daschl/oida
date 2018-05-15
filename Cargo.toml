@@ -19,3 +19,6 @@ toml = "0.4"
 [[bin]]
 name = "oida"
 path = "src/main.rs"
+
+[profile.release]
+lto = true

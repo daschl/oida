@@ -12,21 +12,18 @@ extern crate colored;
 extern crate serde_cbor;
 extern crate toml;
 
-mod source;
 mod parse;
 mod index;
 mod config;
 
 use clap::{App, ArgMatches};
-use source::{FileSource, Source};
 use parse::Parser;
-use index::EventIndex;
 use pbr::{ProgressBar, Units};
-use index::TopologyEvent;
-use config::Config;
+use index::{EventIndex, TopologyEvent};
+use config::{ShowFormat, Config};
 use std::io::prelude::*;
 use std::fs::File;
-use config::ShowFormat;
+use std::io::{BufRead, BufReader};
 
 fn main() {
     let yaml = load_yaml!("cli.yml");
@@ -52,29 +49,44 @@ fn check(matches: &ArgMatches) {
     let config = grab_config(&matches);
     let check_config = config.check.unwrap();
 
-    let source = FileSource::new(&check_config.input).expect("Could not init file source");
     let pattern = check_config.pattern;
     let parser = Parser::new(&pattern).expect("Could not init parser");
     let mut index = EventIndex::new();
 
-    let total_file_size = source.size();
-    let mut pb = ProgressBar::new(total_file_size);
+    let mut line = String::new();
+    
+    let file = File::open(&check_config.input).expect("could not open file");
+    let len = file.metadata().unwrap().len();
+    let mut reader = BufReader::new(file);
+
+    let mut pb = ProgressBar::new(len);
     pb.set_units(Units::Bytes);
     pb.format("[-> ]");
 
     println!("> Starting to analyze \"{}\"", &check_config.input);
 
-    for log_line in source
-        .filter_map(|l| Some(l.expect("Could not decode line!")))
-        .filter_map(|l| {
-            pb.add(l.len() as u64);
-            parser
-                .parse(&l)
-                .expect(&format!("Could not parse line {:?}", l))
-        }) {
-        index.feed(log_line);
+    let mut byte_count = 0u64;
+    loop {
+        let num_bytes = reader.read_line(&mut line);
+        match num_bytes {
+            Ok(num) if num > 0 => {
+                byte_count += num as u64;
+                if byte_count > 1000000 { // update console only every 1MB
+                    pb.add(byte_count);
+                    byte_count = 0;
+                }
+                let parsed = parser.parse(&line).expect(&format!("Could not parse line {:?}", line));
+                if parsed.is_some() {
+                    index.feed(parsed.unwrap());
+                }
+            },
+            Ok(_) => break,
+            Err(e) => panic!(format!("Error wile decoding line! {:?}", e)),
+        }
+        line.clear();
     }
 
+    pb.add(byte_count);
     pb.finish();
 
     println!("> Completed");

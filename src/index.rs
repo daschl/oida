@@ -16,10 +16,13 @@ lazy_static! {
     static ref CLIENT_INIT: Regex = Regex::new(r"CouchbaseEnvironment: \{(.+)\}").unwrap();
 }
 
+type Hostname = String;
+type Bucket = String;
+
 #[derive(Debug, Serialize, Deserialize)]
 pub enum TopologyEvent {
-    ConnectingNode(NaiveDateTime, String),
-    DisconnectingNode(NaiveDateTime, String),
+    ConnectingNode(NaiveDateTime, Hostname),
+    DisconnectingNode(NaiveDateTime, Hostname),
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -28,9 +31,15 @@ pub enum ClientEvent {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+pub enum ErrorEvent {
+    CarrierRefreshFailed(NaiveDateTime, Bucket, Hostname),
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct EventIndex {
     pub topo_events: Vec<TopologyEvent>,
     pub client_events: Vec<ClientEvent>,
+    pub error_events: Vec<ErrorEvent>,
 }
 
 impl EventIndex {
@@ -38,6 +47,7 @@ impl EventIndex {
         EventIndex {
             topo_events: vec![],
             client_events: vec![],
+            error_events: vec![],
         }
     }
 
