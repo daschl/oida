@@ -24,6 +24,7 @@ use config::{ShowFormat, Config};
 use std::io::prelude::*;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
+use std::time::Duration;
 
 fn main() {
     let yaml = load_yaml!("cli.yml");
@@ -52,8 +53,6 @@ fn check(matches: &ArgMatches) {
     let pattern = check_config.pattern;
     let parser = Parser::new(&pattern).expect("Could not init parser");
     let mut index = EventIndex::new();
-
-    let mut line = String::new();
     
     let file = File::open(&check_config.input).expect("could not open file");
     let len = file.metadata().unwrap().len();
@@ -61,20 +60,18 @@ fn check(matches: &ArgMatches) {
 
     let mut pb = ProgressBar::new(len);
     pb.set_units(Units::Bytes);
+    // Don't refresh more often so contention is on stdout which 
+    // will actually slow the whole thing down...
+    pb.set_max_refresh_rate(Some(Duration::from_millis(100)));
     pb.format("[-> ]");
 
     println!("> Starting to analyze \"{}\"", &check_config.input);
-
-    let mut byte_count = 0u64;
+    let mut line = String::new();
     loop {
         let num_bytes = reader.read_line(&mut line);
         match num_bytes {
             Ok(num) if num > 0 => {
-                byte_count += num as u64;
-                if byte_count > 1000000 { // update console only every 1MB
-                    pb.add(byte_count);
-                    byte_count = 0;
-                }
+                pb.add(num as u64);
                 let parsed = parser.parse(&line).expect(&format!("Could not parse line {:?}", line));
                 if parsed.is_some() {
                     index.feed(parsed.unwrap());
@@ -86,9 +83,7 @@ fn check(matches: &ArgMatches) {
         line.clear();
     }
 
-    pb.add(byte_count);
     pb.finish();
-
     println!("> Completed");
 
     let output_path = check_config.output.unwrap_or("index.oida".into());
