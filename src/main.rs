@@ -24,11 +24,12 @@ use index::{ClientEvent, EventIndex, TopologyEvent};
 use parse::Parser;
 use pbr::{ProgressBar, Units};
 use prettytable::Table;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::{BufRead, BufReader};
 use std::time::Duration;
+use std::iter::FromIterator;
 
 fn main() {
     let yaml = load_yaml!("cli.yml");
@@ -116,105 +117,14 @@ fn show(matches: &ArgMatches) {
     }
 }
 
-fn format_client_init_config(input: HashMap<String, String>) -> String {
-    lazy_static! {
-        static ref DEFAULTS: HashMap<&'static str, &'static str> = {
-            let mut m = HashMap::new();
-            m.insert("sslEnabled", "false");
-            m.insert("sslKeystoreFile", "'null'");
-            m.insert("sslTruststoreFile", "'null'");
-            m.insert("sslKeystorePassword", "false");
-            m.insert("sslTruststorePassword", "false");
-            m.insert("sslKeystore", "null");
-            m.insert("sslTruststore", "null");
-            m.insert("bootstrapHttpEnabled", "true");
-            m.insert("bootstrapCarrierEnabled", "true");
-            m.insert("bootstrapHttpDirectPort", "8091");
-            m.insert("bootstrapHttpSslPort", "18091");
-            m.insert("bootstrapCarrierDirectPort", "11210");
-            m.insert("bootstrapCarrierSslPort", "11207");
-            m.insert("responseBufferSize", "16384");
-            m.insert("requestBufferSize", "16384");
-            m.insert("kvServiceEndpoints", "1");
-            m.insert("viewServiceEndpoints", "12");
-            m.insert("queryServiceEndpoints", "12");
-            m.insert("searchServiceEndpoints", "12");
-            m.insert("configPollInterval", "2500");
-            m.insert("configPollFloorInterval", "50");
-            m.insert("ioPool", "NioEventLoopGroup");
-            m.insert("kvIoPool", "null");
-            m.insert("viewIoPool", "null");
-            m.insert("searchIoPool", "null");
-            m.insert("queryIoPool", "null");
-            m.insert("coreScheduler", "CoreScheduler");
-            m.insert(
-                "memcachedHashingStrategy",
-                "DefaultMemcachedHashingStrategy",
-            );
-            m.insert("eventBus", "DefaultEventBus");
-            m.insert("maxRequestLifetime", "75000");
-            m.insert(
-                "retryDelay",
-                "ExponentialDelay{growBy 1.0 MICROSECONDSpowers of 2; lower=100upper=100000}",
-            );
-            m.insert(
-                "reconnectDelay",
-                "ExponentialDelay{growBy 1.0 MILLISECONDSpowers of 2; lower=32upper=4096}",
-            );
-            m.insert(
-                "observeIntervalDelay",
-                "ExponentialDelay{growBy 1.0 MICROSECONDSpowers of 2; lower=10upper=100000}",
-            );
-            m.insert("keepAliveInterval", "30000");
-            m.insert("continuousKeepAliveEnabled", "true");
-            m.insert("keepAliveErrorThreshold", "4");
-            m.insert("keepAliveTimeout", "2500");
-            m.insert("autoreleaseAfter", "2000");
-            m.insert("bufferPoolingEnabled", "true");
-            m.insert("tcpNodelayEnabled", "true");
-            m.insert("mutationTokensEnabled", "false");
-            m.insert("socketConnectTimeout", "1000");
-            m.insert("callbacksOnIoPool", "false");
-            m.insert("disconnectTimeout", "25000");
-            m.insert(
-                "requestBufferWaitStrategy",
-                "com.couchbase.client.core.env.DefaultCoreEnvironment$3@2d928643",
-            );
-            m.insert("certAuthEnabled", "false");
-            m.insert("coreSendHook", "null");
-            m.insert("forceSaslPlain", "false");
-            m.insert("compressionMinRatio", "0.83");
-            m.insert("compressionMinSize", "32");
-            m.insert("queryTimeout", "75000");
-            m.insert("viewTimeout", "75000");
-            m.insert("searchTimeout", "75000");
-            m.insert("analyticsTimeout", "75000");
-            m.insert("kvTimeout", "2500");
-            m.insert("connectTimeout", "5000");
-            m.insert("dnsSrvEnabled", "false");
-            m.insert("dcpConnectionName", "dcp/core-io");
-            m.insert("retryStrategy", "BestEffort");
-            m.insert("dcpConnectionBufferAckThreshold", "0.2");
-            m.insert("dcpEnabled", "false");
-            m.insert("dcpConnectionBufferSize", "20971520");
-            m
-        };
-    }
+fn format_client_init_config(mut input: HashMap<String, String>) -> String {
+    let sorted = BTreeMap::from_iter(input.drain());
 
     let mut table = Table::new();
-
     table.add_row(row!["SETTING", "VALUE"]);
 
-    for (key, val) in &input {
-        match DEFAULTS.get(&key.as_ref()) {
-            Some(v) if v != val => {
-                table.add_row(row![key, val]);
-            }
-            None => {
-                table.add_row(row![key, val]);
-            }
-            _ => (),
-        }
+    for (key, val) in &sorted {
+        table.add_row(row![key, val]);
     }
 
     let mut output: Vec<u8> = vec![];
@@ -235,7 +145,7 @@ fn show_cli(index: EventIndex) {
             ClientEvent::ClientInit(d, i) => println!(
                 "  {} Client Init Config (non-defaults or dynamic):\n\n{}",
                 d.format("%H:%M:%S").to_string(),
-                format_client_init_config(i)
+                format_client_init_config(i.non_defaults())
             ),
         }
     }

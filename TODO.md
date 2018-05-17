@@ -2,7 +2,10 @@
 
 - Add support for show command to set a time range (from/to)
 - Show command should allow to aggregate events into i.e. minutes
+
 - Show command client config: color defaults and changed values
+    * it shows only non-default and dynamics
+    * show defaults if possible in (..) next to it
 
 - Add carrier refresher failed to error events
 - Parse client config as part of the client init

@@ -4,4 +4,5 @@
 tmp/
 index.oida
 oida.toml
-
+**/*.iml
+.idea/
